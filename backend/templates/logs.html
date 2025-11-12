@@ -1,0 +1,451 @@
+{% extends "base.html" %}
+
+{% block title %}Logs - Sistema de Gerenciamento{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-list-alt"></i> Logs e Monitoramento</h2>
+    <div>
+        <button class="btn btn-primary" onclick="refreshLogs()">
+            <i class="fas fa-sync-alt"></i> Atualizar
+        </button>
+        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#exportModal">
+            <i class="fas fa-download"></i> Exportar
+        </button>
+        <button class="btn btn-danger" onclick="clearLogs()">
+            <i class="fas fa-trash"></i> Limpar Logs
+        </button>
+    </div>
+</div>
+
+<!-- Filtros e Estatísticas -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Tipo</label>
+                        <select class="form-select" id="logTypeFilter" onchange="filterLogs()">
+                            <option value="">Todos</option>
+                            <option value="system">Sistema</option>
+                            <option value="device">Dispositivo</option>
+                            <option value="command">Comando</option>
+                            <option value="payload">Payload</option>
+                            <option value="error">Erro</option>
+                            <option value="warning">Aviso</option>
+                            <option value="info">Informação</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Dispositivo</label>
+                        <select class="form-select" id="deviceFilter" onchange="filterLogs()">
+                            <option value="">Todos</option>
+                            {% for device in devices %}
+                                <option value="{{ device.device_id }}" 
+                                        {% if request.args.get('device') == device.device_id %}selected{% endif %}>
+                                    {{ device.model }} ({{ device.device_id[:8] }}...)
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Período</label>
+                        <select class="form-select" id="periodFilter" onchange="filterLogs()">
+                            <option value="1h">Última hora</option>
+                            <option value="24h" selected>Últimas 24h</option>
+                            <option value="7d">Últimos 7 dias</option>
+                            <option value="30d">Últimos 30 dias</option>
+                            <option value="all">Todo o período</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Buscar</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="searchFilter" placeholder="Buscar...">
+                            <button class="btn btn-outline-secondary" onclick="filterLogs()">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="row">
+            <div class="col-6">
+                <div class="card text-center bg-primary text-white">
+                    <div class="card-body py-2">
+                        <h5 class="mb-0">{{ stats.total_logs }}</h5>
+                        <small>Total</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="card text-center bg-warning text-white">
+                    <div class="card-body py-2">
+                        <h5 class="mb-0">{{ stats.recent_logs }}</h5>
+                        <small>Última Hora</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 mt-2">
+                <div class="card text-center bg-danger text-white">
+                    <div class="card-body py-2">
+                        <h5 class="mb-0">{{ stats.error_logs }}</h5>
+                        <small>Erros</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 mt-2">
+                <div class="card text-center bg-success text-white">
+                    <div class="card-body py-2">
+                        <h5 class="mb-0">{{ stats.device_logs }}</h5>
+                        <small>Dispositivos</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gráfico de Atividade -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-chart-line"></i> Atividade do Sistema
+        </h5>
+    </div>
+    <div class="card-body">
+        <canvas id="activityChart" height="100"></canvas>
+    </div>
+</div>
+
+<!-- Lista de Logs -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-stream"></i> Logs do Sistema
+        </h5>
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="autoRefresh" checked>
+            <label class="form-check-label" for="autoRefresh">Atualização Automática</label>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="logsTable">
+                <thead>
+                    <tr>
+                        <th>Data/Hora</th>
+                        <th>Tipo</th>
+                        <th>Dispositivo</th>
+                        <th>Mensagem</th>
+                        <th>Detalhes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr class="log-row" data-type="{{ log.log_type }}" data-device="{{ log.device_id or '' }}">
+                        <td>
+                            <small>{{ log.timestamp.strftime('%d/%m %H:%M:%S') }}</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-{{ log.type_color }}">
+                                <i class="fas fa-{{ log.type_icon }}"></i>
+                                {{ log.log_type }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if log.device_id %}
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-mobile-alt text-muted me-2"></i>
+                                    <div>
+                                        <div><small>{{ log.device_model or 'Desconhecido' }}</small></div>
+                                        <small class="text-muted">{{ log.device_id[:8] }}...</small>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <span class="text-muted">Sistema</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="log-message">{{ log.message }}</div>
+                            {% if log.additional_info %}
+                                <small class="text-muted">{{ log.additional_info }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if log.details %}
+                                <button class="btn btn-sm btn-outline-info" 
+                                        onclick="showLogDetails('{{ log.id }}')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">
+                            <i class="fas fa-list-alt fa-3x mb-3"></i>
+                            <h5>Nenhum log encontrado</h5>
+                            <p>Os logs aparecerão aqui quando houver atividade no sistema.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Paginação -->
+{% if logs %}
+<div class="d-flex justify-content-between align-items-center mt-3">
+    <div>
+        <small class="text-muted">
+            Mostrando {{ logs|length }} de {{ stats.total_logs }} logs
+        </small>
+    </div>
+    <nav>
+        <ul class="pagination pagination-sm mb-0">
+            <li class="page-item {% if not has_prev %}disabled{% endif %}">
+                <a class="page-link" href="?page={{ page - 1 }}">Anterior</a>
+            </li>
+            {% for p in range(1, total_pages + 1) %}
+                <li class="page-item {% if p == page %}active{% endif %}">
+                    <a class="page-link" href="?page={{ p }}">{{ p }}</a>
+                </li>
+            {% endfor %}
+            <li class="page-item {% if not has_next %}disabled{% endif %}">
+                <a class="page-link" href="?page={{ page + 1 }}">Próxima</a>
+            </li>
+        </ul>
+    </nav>
+</div>
+{% endif %}
+
+<!-- Modal de Detalhes do Log -->
+<div class="modal fade" id="logDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detalhes do Log</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <pre id="logDetailsContent" class="bg-dark text-light p-3 rounded" style="max-height: 400px; overflow-y: auto;"></pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Exportação -->
+<div class="modal fade" id="exportModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Exportar Logs</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="exportForm">
+                    <div class="mb-3">
+                        <label class="form-label">Formato</label>
+                        <select class="form-select" name="format" required>
+                            <option value="json">JSON</option>
+                            <option value="csv">CSV</option>
+                            <option value="txt">Texto</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Período</label>
+                        <select class="form-select" name="period" required>
+                            <option value="24h">Últimas 24 horas</option>
+                            <option value="7d">Últimos 7 dias</option>
+                            <option value="30d">Últimos 30 dias</option>
+                            <option value="all">Todo o período</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tipos de Log</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="types" value="system" checked>
+                            <label class="form-check-label">Sistema</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="types" value="device" checked>
+                            <label class="form-check-label">Dispositivo</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="types" value="command" checked>
+                            <label class="form-check-label">Comando</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="types" value="error" checked>
+                            <label class="form-check-label">Erro</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="exportLogs()">Exportar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    let autoRefreshInterval = null;
+    
+    // Inicializar gráfico de atividade
+    const ctx = document.getElementById('activityChart').getContext('2d');
+    const activityChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['00:00', '01:00', '02:00', '03:00', '04:00', '05:00', '06:00', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'],
+            datasets: [{
+                label: 'Logs por Hora',
+                data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                borderColor: '#007bff',
+                backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+    
+    // Atualizar dados do gráfico com dados reais (se disponíveis)
+    function updateChartData() {
+        // Esta função será preenchida quando os dados estiverem disponíveis
+        // Por enquanto, usa dados estáticos
+    }
+    
+    function filterLogs() {
+        const typeFilter = document.getElementById('logTypeFilter').value;
+        const deviceFilter = document.getElementById('deviceFilter').value;
+        const periodFilter = document.getElementById('periodFilter').value;
+        const searchFilter = document.getElementById('searchFilter').value.toLowerCase();
+        
+        const rows = document.querySelectorAll('.log-row');
+        rows.forEach(row => {
+            const matchesType = !typeFilter || row.dataset.type === typeFilter;
+            const matchesDevice = !deviceFilter || row.dataset.device === deviceFilter;
+            const matchesSearch = !searchFilter || row.textContent.toLowerCase().includes(searchFilter);
+            
+            row.style.display = matchesType && matchesDevice && matchesSearch ? '' : 'none';
+        });
+    }
+    
+    function showLogDetails(logId) {
+        fetch(`/api/log/${logId}`)
+            .then(response => response.json())
+            .then(log => {
+                const content = document.getElementById('logDetailsContent');
+                content.textContent = JSON.stringify(log.details, null, 2);
+                $('#logDetailsModal').modal('show');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Erro ao carregar detalhes', 'danger');
+            });
+    }
+    
+    function exportLogs() {
+        const form = document.getElementById('exportForm');
+        const formData = new FormData(form);
+        
+        const types = [];
+        formData.getAll('types').forEach(type => types.push(type));
+        
+        const params = new URLSearchParams({
+            format: formData.get('format'),
+            period: formData.get('period'),
+            types: types.join(',')
+        });
+        
+        window.open(`/api/export_logs?${params}`, '_blank');
+        $('#exportModal').modal('hide');
+    }
+    
+    function clearLogs() {
+        if (confirm('Tem certeza que deseja limpar todos os logs? Esta ação não pode ser desfeita.')) {
+            fetch('/api/clear_logs', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        showNotification('Logs limpos com sucesso', 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('Erro ao limpar logs', 'danger');
+                });
+        }
+    }
+    
+    function refreshLogs() {
+        location.reload();
+    }
+    
+    // Atualização automática
+    document.getElementById('autoRefresh').addEventListener('change', function() {
+        if (this.checked) {
+            autoRefreshInterval = setInterval(refreshLogs, 30000); // 30 segundos
+        } else {
+            clearInterval(autoRefreshInterval);
+        }
+    });
+    
+    // Iniciar atualização automática
+    if (document.getElementById('autoRefresh').checked) {
+        autoRefreshInterval = setInterval(refreshLogs, 30000);
+    }
+    
+    // Aplicar filtro de dispositivo da URL
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const deviceId = urlParams.get('device');
+        if (deviceId) {
+            document.getElementById('deviceFilter').value = deviceId;
+            filterLogs();
+        }
+    });
+</script>
+
+<style>
+.log-row:hover {
+    background-color: #f8f9fa;
+}
+.log-message {
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+</style>
+{% endblock %}

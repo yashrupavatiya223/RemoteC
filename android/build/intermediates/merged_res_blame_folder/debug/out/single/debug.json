@@ -1,0 +1,42 @@
+[
+    {
+        "merged": "com.argus.rat.android-merged_res-41:/anim_taptrap_sms_attack.xml.flat",
+        "source": "com.argus.rat.android-main-43:/anim/taptrap_sms_attack.xml"
+    },
+    {
+        "merged": "com.argus.rat.android-merged_res-41:/drawable_ic_android_black_24dp.xml.flat",
+        "source": "com.argus.rat.android-main-43:/drawable/ic_android_black_24dp.xml"
+    },
+    {
+        "merged": "com.argus.rat.android-merged_res-41:/anim_taptrap_overlay_attack.xml.flat",
+        "source": "com.argus.rat.android-main-43:/anim/taptrap_overlay_attack.xml"
+    },
+    {
+        "merged": "com.argus.rat.android-merged_res-41:/anim_taptrap_camera_attack.xml.flat",
+        "source": "com.argus.rat.android-main-43:/anim/taptrap_camera_attack.xml"
+    },
+    {
+        "merged": "com.argus.rat.android-merged_res-41:/anim_taptrap_accessibility_attack.xml.flat",
+        "source": "com.argus.rat.android-main-43:/anim/taptrap_accessibility_attack.xml"
+    },
+    {
+        "merged": "com.argus.rat.android-merged_res-41:/xml_accessibility_service_config.xml.flat",
+        "source": "com.argus.rat.android-main-43:/xml/accessibility_service_config.xml"
+    },
+    {
+        "merged": "com.argus.rat.android-merged_res-41:/anim_taptrap_fade_out.xml.flat",
+        "source": "com.argus.rat.android-main-43:/anim/taptrap_fade_out.xml"
+    },
+    {
+        "merged": "com.argus.rat.android-merged_res-41:/anim_taptrap_location_attack.xml.flat",
+        "source": "com.argus.rat.android-main-43:/anim/taptrap_location_attack.xml"
+    },
+    {
+        "merged": "com.argus.rat.android-merged_res-41:/layout_activity_main.xml.flat",
+        "source": "com.argus.rat.android-main-43:/layout/activity_main.xml"
+    },
+    {
+        "merged": "com.argus.rat.android-merged_res-41:/anim_taptrap_fade_in.xml.flat",
+        "source": "com.argus.rat.android-main-43:/anim/taptrap_fade_in.xml"
+    }
+]

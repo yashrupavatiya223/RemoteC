@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Argus C2 - Mapa em Tempo Real</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a1a;
+            color: #ffffff;
+        }
+        
+        .header {
+            background: #2d2d2d;
+            padding: 15px 20px;
+            border-bottom: 2px solid #00ff00;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            color: #00ff00;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 30px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #00ff00;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .controls {
+            background: #2d2d2d;
+            padding: 10px 20px;
+            border-bottom: 1px solid #444;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .control-btn {
+            padding: 8px 16px;
+            background: #444;
+            border: 1px solid #666;
+            border-radius: 4px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .control-btn:hover {
+            background: #555;
+            border-color: #00ff00;
+        }
+        
+        .control-btn.active {
+            background: #00ff00;
+            color: #000;
+            border-color: #00ff00;
+        }
+        
+        #map {
+            height: calc(100vh - 130px);
+            width: 100%;
+        }
+        
+        .device-popup {
+            font-family: monospace;
+            color: #000;
+        }
+        
+        .device-popup h3 {
+            margin-bottom: 10px;
+            color: #00ff00;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+        
+        .device-popup .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 3px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .device-popup .info-label {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .device-popup .info-value {
+            color: #666;
+        }
+        
+        .marker-pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(0, 255, 0, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(0, 255, 0, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(0, 255, 0, 0);
+            }
+        }
+        
+        .legend {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(45, 45, 45, 0.95);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #00ff00;
+            z-index: 1000;
+        }
+        
+        .legend h4 {
+            margin-bottom: 10px;
+            color: #00ff00;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+            font-size: 12px;
+        }
+        
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            margin-right: 8px;
+            border: 2px solid #fff;
+        }
+        
+        .status-online { background: #00ff00; }
+        .status-offline { background: #ff0000; }
+        .status-idle { background: #ffaa00; }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <h1>🛰️ ARGUS C2 - Mapa em Tempo Real</h1>
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-value" id="stat-total">0</div>
+                <div class="stat-label">Total Dispositivos</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="stat-online">0</div>
+                <div class="stat-label">Online</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="stat-offline">0</div>
+                <div class="stat-label">Offline</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Controls -->
+    <div class="controls">
+        <button class="control-btn active" id="btn-auto-refresh">
+            🔄 Auto-Refresh (5s)
+        </button>
+        <button class="control-btn" id="btn-cluster">
+            📍 Cluster Mode
+        </button>
+        <button class="control-btn" id="btn-heat">
+            🔥 Heat Map
+        </button>
+        <button class="control-btn" id="btn-track">
+            📡 Track Selected
+        </button>
+        <span style="margin-left: auto; color: #888;">
+            Última atualização: <span id="last-update">--:--:--</span>
+        </span>
+    </div>
+    
+    <!-- Map Container -->
+    <div id="map"></div>
+    
+    <!-- Legend -->
+    <div class="legend">
+        <h4>Status</h4>
+        <div class="legend-item">
+            <div class="legend-color status-online"></div>
+            <span>Online</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color status-idle"></div>
+            <span>Idle (&lt;5 min)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color status-offline"></div>
+            <span>Offline (&gt;5 min)</span>
+        </div>
+    </div>
+    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script>
+        // Inicializar mapa
+        const map = L.map('map').setView([0, 0], 2);
+        
+        // Tile layer (OpenStreetMap)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 19
+        }).addTo(map);
+        
+        // Marcadores de dispositivos
+        const markers = {};
+        let autoRefresh = true;
+        let refreshInterval;
+        
+        // Ícones customizados por status
+        const icons = {
+            online: L.divIcon({
+                className: 'custom-marker',
+                html: '<div style="background: #00ff00; width: 16px; height: 16px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 10px rgba(0,255,0,0.8);"></div>',
+                iconSize: [22, 22],
+                iconAnchor: [11, 11]
+            }),
+            idle: L.divIcon({
+                className: 'custom-marker',
+                html: '<div style="background: #ffaa00; width: 16px; height: 16px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 10px rgba(255,170,0,0.8);"></div>',
+                iconSize: [22, 22],
+                iconAnchor: [11, 11]
+            }),
+            offline: L.divIcon({
+                className: 'custom-marker',
+                html: '<div style="background: #ff0000; width: 16px; height: 16px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 10px rgba(255,0,0,0.8);"></div>',
+                iconSize: [22, 22],
+                iconAnchor: [11, 11]
+            })
+        };
+        
+        // Atualizar posições dos dispositivos
+        async function updateDevicePositions() {
+            try {
+                const response = await fetch('/api/military/map/live');
+                const data = await response.json();
+                
+                if (data.positions && Array.isArray(data.positions)) {
+                    // Atualizar estatísticas
+                    document.getElementById('stat-total').textContent = data.device_count;
+                    
+                    let onlineCount = 0;
+                    let offlineCount = 0;
+                    
+                    // Atualizar ou criar marcadores
+                    data.positions.forEach(pos => {
+                        const deviceId = pos.device_id;
+                        const lat = pos.latitude;
+                        const lon = pos.longitude;
+                        
+                        // Determinar status baseado no timestamp
+                        const timestamp = new Date(pos.timestamp);
+                        const now = new Date();
+                        const minutesAgo = (now - timestamp) / 1000 / 60;
+                        
+                        let status = 'online';
+                        if (minutesAgo > 5) {
+                            status = 'offline';
+                            offlineCount++;
+                        } else if (minutesAgo > 1) {
+                            status = 'idle';
+                            onlineCount++;
+                        } else {
+                            onlineCount++;
+                        }
+                        
+                        // Criar popup com informações
+                        const popupContent = `
+                            <div class="device-popup">
+                                <h3>📱 Device ${deviceId}</h3>
+                                <div class="info-row">
+                                    <span class="info-label">Coordenadas:</span>
+                                    <span class="info-value">${lat.toFixed(6)}, ${lon.toFixed(6)}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Precisão:</span>
+                                    <span class="info-value">${pos.accuracy ? pos.accuracy.toFixed(0) + 'm' : 'N/A'}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Bateria:</span>
+                                    <span class="info-value">${pos.battery_level ? pos.battery_level.toFixed(0) + '%' : 'N/A'}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Velocidade:</span>
+                                    <span class="info-value">${pos.speed ? pos.speed.toFixed(1) + ' km/h' : 'N/A'}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Última atualização:</span>
+                                    <span class="info-value">${minutesAgo < 1 ? 'Agora' : Math.floor(minutesAgo) + ' min atrás'}</span>
+                                </div>
+                            </div>
+                        `;
+                        
+                        if (markers[deviceId]) {
+                            // Atualizar posição existente
+                            markers[deviceId].setLatLng([lat, lon]);
+                            markers[deviceId].setIcon(icons[status]);
+                            markers[deviceId].getPopup().setContent(popupContent);
+                        } else {
+                            // Criar novo marcador
+                            const marker = L.marker([lat, lon], {
+                                icon: icons[status]
+                            }).addTo(map);
+                            
+                            marker.bindPopup(popupContent);
+                            markers[deviceId] = marker;
+                            
+                            // Ajustar zoom para mostrar todos os marcadores na primeira vez
+                            if (Object.keys(markers).length === 1) {
+                                map.setView([lat, lon], 13);
+                            }
+                        }
+                    });
+                    
+                    document.getElementById('stat-online').textContent = onlineCount;
+                    document.getElementById('stat-offline').textContent = offlineCount;
+                }
+                
+                // Atualizar timestamp
+                const now = new Date();
+                document.getElementById('last-update').textContent = now.toLocaleTimeString();
+                
+            } catch (error) {
+                console.error('Erro ao atualizar posições:', error);
+            }
+        }
+        
+        // Controles
+        document.getElementById('btn-auto-refresh').addEventListener('click', function() {
+            autoRefresh = !autoRefresh;
+            this.classList.toggle('active');
+            
+            if (autoRefresh) {
+                this.textContent = '🔄 Auto-Refresh (5s)';
+                startAutoRefresh();
+            } else {
+                this.textContent = '⏸️ Auto-Refresh (Pausado)';
+                stopAutoRefresh();
+            }
+        });
+        
+        document.getElementById('btn-cluster').addEventListener('click', function() {
+            this.classList.toggle('active');
+            // TODO: Implementar cluster mode
+            alert('Cluster mode em desenvolvimento');
+        });
+        
+        document.getElementById('btn-heat').addEventListener('click', function() {
+            this.classList.toggle('active');
+            // TODO: Implementar heat map
+            alert('Heat map em desenvolvimento');
+        });
+        
+        document.getElementById('btn-track').addEventListener('click', function() {
+            this.classList.toggle('active');
+            // TODO: Implementar tracking de dispositivo específico
+            alert('Tracking em desenvolvimento');
+        });
+        
+        function startAutoRefresh() {
+            if (refreshInterval) clearInterval(refreshInterval);
+            refreshInterval = setInterval(updateDevicePositions, 5000); // 5 segundos
+        }
+        
+        function stopAutoRefresh() {
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+                refreshInterval = null;
+            }
+        }
+        
+        // Inicializar
+        updateDevicePositions();
+        if (autoRefresh) {
+            startAutoRefresh();
+        }
+        
+        // Limpar ao sair
+        window.addEventListener('beforeunload', function() {
+            stopAutoRefresh();
+        });
+    </script>
+</body>
+</html>
+

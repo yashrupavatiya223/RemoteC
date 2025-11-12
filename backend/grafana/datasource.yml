@@ -1,0 +1,27 @@
+# Configuração de Data Source do Prometheus para Grafana
+# Arquivo: /etc/grafana/provisioning/datasources/datasource.yml
+
+apiVersion: 1
+
+datasources:
+  - name: Argus C2 Prometheus
+    type: prometheus
+    access: proxy
+    url: http://localhost:5000/api/military/analytics/export/prometheus
+    isDefault: true
+    editable: true
+    jsonData:
+      httpMethod: GET
+      timeInterval: '5s'
+    version: 1
+
+  - name: Argus C2 JSON API
+    type: simplejson
+    access: proxy
+    url: http://localhost:5000/api/military/analytics
+    isDefault: false
+    editable: true
+    jsonData:
+      apiKey: 'your-api-key-here'
+    version: 1
+

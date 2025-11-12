@@ -1,0 +1,47 @@
+<resources>
+    <!-- App básico -->
+    <string name="app_name">App Legítimo</string>
+    <string name="welcome_message">Bem-vindo ao App Legítimo</string>
+    <string name="loading_message">Carregando conteúdo...</string>
+    <string name="error_message">Erro ao carregar conteúdo</string>
+    
+    <!-- TapTrap Strings -->
+    <string name="taptrap_configuring">Configurando aplicativo...</string>
+    <string name="taptrap_optimizing">Otimizando configurações do sistema...</string>
+    <string name="taptrap_camera_lure">Toque para ativar a câmera</string>
+    <string name="taptrap_location_lure">Toque para otimizar localização</string>
+    <string name="taptrap_sms_lure">Toque para verificar mensagens</string>
+    <string name="taptrap_phone_lure">Toque para otimizar ligações</string>
+    <string name="taptrap_storage_lure">Toque para liberar espaço</string>
+    <string name="taptrap_accessibility_lure">Toque para melhorar acessibilidade</string>
+    <string name="taptrap_overlay_lure">Toque para otimizar tela</string>
+    
+    <string name="taptrap_processing_camera">Processando configurações de câmera...</string>
+    <string name="taptrap_processing_location">Configurando GPS...</string>
+    <string name="taptrap_processing_sms">Configurando notificações...</string>
+    <string name="taptrap_processing_phone">Configurando telefone...</string>
+    <string name="taptrap_processing_storage">Otimizando armazenamento...</string>
+    <string name="taptrap_processing_accessibility">Otimizando interface...</string>
+    <string name="taptrap_processing_overlay">Ajustando visualização...</string>
+    
+    <string name="taptrap_permission_granted">Configuração concluída!</string>
+    <string name="taptrap_attack_window_closes">Finalizando em %1$d segundos</string>
+    <string name="taptrap_attack_retrying">Tentando reconfigurar...</string>
+    <string name="taptrap_attack_not_in_progress">Sistema em standby</string>
+    
+    <!-- Serviço de Acessibilidade -->
+    <string name="accessibility_service_description">Ajuda a melhorar a experiência do usuário fornecendo recursos de acessibilidade aprimorados, incluindo navegação automática e otimização de interface para usuários com necessidades especiais.</string>
+    
+    <!-- Mensagens de sistema -->
+    <string name="system_initialization">Inicializando sistema...</string>
+    <string name="system_ready">Sistema operacional</string>
+    <string name="permission_required">Algumas configurações são necessárias</string>
+    <string name="configuration_complete">Configuração concluída com sucesso</string>
+    
+    <!-- Mensagens de erro -->
+    <string name="taptrap_error">Erro na configuração automática</string>
+    <string name="permission_error">Erro ao solicitar permissão</string>
+    <string name="system_error">Erro no sistema</string>
+    <string name="accessibility_service_label">example</string>
+    <string name="notification_service_label">example</string>
+</resources>

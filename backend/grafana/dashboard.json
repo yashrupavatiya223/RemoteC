@@ -1,0 +1,159 @@
+{
+  "dashboard": {
+    "title": "Argus C2 - Military Dashboard",
+    "tags": ["argus", "c2", "android"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Total Devices",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "argus_devices_total",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 50
+                },
+                {
+                  "color": "red",
+                  "value": 100
+                }
+              ]
+            }
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 6,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": 2,
+        "title": "Online Devices",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "argus_devices_online",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "red",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 10
+                },
+                {
+                  "color": "green",
+                  "value": 20
+                }
+              ]
+            }
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 6,
+          "x": 6,
+          "y": 0
+        }
+      },
+      {
+        "id": 3,
+        "title": "Commands Success Rate",
+        "type": "gauge",
+        "targets": [
+          {
+            "expr": "100 * (argus_commands_successful / argus_commands_total)",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "max": 100,
+            "min": 0,
+            "unit": "percent"
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 6,
+          "x": 12,
+          "y": 0
+        }
+      },
+      {
+        "id": 4,
+        "title": "Device Activity Timeline",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "argus_devices_online",
+            "refId": "A",
+            "legendFormat": "Online"
+          },
+          {
+            "expr": "argus_devices_total - argus_devices_online",
+            "refId": "B",
+            "legendFormat": "Offline"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 18,
+          "x": 0,
+          "y": 8
+        }
+      },
+      {
+        "id": 5,
+        "title": "Commands Executed (24h)",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(argus_commands_total[5m])",
+            "refId": "A",
+            "legendFormat": "Commands/sec"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 18,
+          "x": 0,
+          "y": 16
+        }
+      }
+    ],
+    "schemaVersion": 37,
+    "version": 1
+  }
+}
+

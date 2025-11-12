@@ -1,0 +1,3 @@
+rootProject.name = "Argus v.2.0"
+include ':android'
+

