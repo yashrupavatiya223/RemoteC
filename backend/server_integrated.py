@@ -21,7 +21,9 @@ import logging
 # Adicionar diretório database ao path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from config import get_config
+
+from backend.config import get_config
+
 from database.backend.database_manager import DatabaseManager, db
 from database.backend.models import Device, Command, User
 from backend.military import register_military_routes
